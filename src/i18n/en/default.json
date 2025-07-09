@@ -1,0 +1,7 @@
+{
+  "ok": "Request successful",
+  "successfullyCreated": "Successfully created",
+  "successfullyDeleted": "Successfully deleted",
+  "successfullyUpdated": "Updated successfully",
+  "other": "Others"
+}

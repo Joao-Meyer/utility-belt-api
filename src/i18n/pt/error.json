@@ -1,0 +1,23 @@
+{
+  "badRequest": "Falha na requisição",
+  "loginFailed": "Erro ao realizar login",
+  "unauthorized": "Usuário não autenticado",
+  "badLoginCredentials": "E-mail e/ou senha inválido(s)",
+  "badCredentials": "Dados inválido(s)",
+  "validationErrorResponse": "Falha durante validação do formulário",
+  "underReview": "Sua solicitação ainda está em análise",
+  "notFound": "não encontrado",
+  "emailInUse": "Este e-mail já está em uso",
+  "invalidKey": "Chave inválida",
+  "notPermission": "Permissão negada",
+  "duplicateKey": "Valor duplicado,",
+  "oneCategoryIsRequired": "Having a category is required",
+  "isAlreadyInUse": "já está em uso",
+  "timeout": "Solicitação expirou. Tente novamente mais tarde",
+  "internalServerError": "Erro interno do servidor",
+  "invalidOrderValue": "Valor da ordem invalido",
+  "checkYourEmail": "Verifique seu e-mail antes de realizar login",
+  "maxCategories": "O maximo de categorias e",
+  "maxRestaurant": "Você atingiu o número máximo de restaurantes do seu plano",
+  "selectAValidCurrencyType": "Selecione um tipo de moeda válido"
+}

@@ -1,0 +1,7 @@
+export enum ReleaseStatus {
+  NOT_RELEASED = 'NOT_RELEASED',
+  RELEASING = 'RELEASING',
+  FINISHED = 'FINISHED',
+  CANCELLED = 'CANCELLED',
+  HIATUS = 'HIATUS'
+}

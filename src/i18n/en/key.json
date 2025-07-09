@@ -1,0 +1,10 @@
+{
+  "company_url": "Company URL",
+  "custom_domain": "Custom domain",
+  "code": "Code",
+  "restaurant_url": "Restaurant URL",
+  "tmdb_id": "TMDB id",
+  "email": "Email",
+  "none": "",
+  "movie_id, playlist_id": "movie and playlist"
+}
