@@ -45,6 +45,7 @@ export const findMovieController: Controller =
       const categoryIds = getQueryArray(query.categoryIds);
       const tagIds = getQueryArray(query.tagIds);
       const watchStatus = getQueryArray(query.watchStatus);
+      const favorite = query.favorite === 'true' ? true : query.favorite === 'false' ? false : null;
 
       const queryBuilder = movieRepository
         .createQueryBuilder('m')
@@ -53,7 +54,7 @@ export const findMovieController: Controller =
           userId: user.id
         })
         .orderBy(
-          `m.${query?.sortBy ?? 'createdAt'}`,
+          `m.${query?.orderBy ?? 'airedAt'}`,
           query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'ASC'
         )
         .skip(skip)
@@ -68,9 +69,18 @@ export const findMovieController: Controller =
       }
 
       if (tagIds?.length) {
-        queryBuilder.leftJoin('m.movieTagList', 'st').andWhere('mt.tagId IN (:...tagIds)', {
+        queryBuilder.leftJoin('m.movieTagList', 'mt').andWhere('mt.tagId IN (:...tagIds)', {
           tagIds: tagIds
         });
+      }
+
+      if (favorite === true) {
+        queryBuilder.andWhere('um.favorite = :favorite', { favorite });
+      } else if (favorite === false) {
+        queryBuilder.andWhere(
+          'um.favorite = :favorite OR um.favorite IS NULL OR um.id IS NULL OR um.watchStatus = :noneStatus',
+          { favorite, noneStatus: 'NONE' }
+        );
       }
 
       if (watchStatus?.filter((item) => item !== WatchStatus.NONE)?.length) {

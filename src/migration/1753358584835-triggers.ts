@@ -15,7 +15,7 @@ export class Triggers1753358584835 implements MigrationInterface {
         FROM ranked_series
         WHERE series.id = ranked_series.id;
       END;
-      $$ LANGUAGE plpgsql;
+      $$ LANGUAGE plpgsql VOLATILE;
     `);
 
     await queryRunner.query(`

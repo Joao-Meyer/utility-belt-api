@@ -22,7 +22,7 @@ export class UserSeriesEpisodeWatchedEntity {
     type: 'enum',
     name: 'watch_status',
     enum: WatchStatus,
-    default: WatchStatus.NOT_STARTED
+    default: WatchStatus.NONE
   })
   public watchStatus: WatchStatus;
 

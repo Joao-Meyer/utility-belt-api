@@ -1,8 +1,15 @@
-import { finishedAt, formatMovie } from '@application/helper';
-import { categoryFindParams, movieFindParams, tagFindParams, themeFindParams } from '@data/search';
+import { formatMovie } from '@application/helper';
+import {
+  categoryFindParams,
+  movieFindParams,
+  tagFindParams,
+  themeFindParams,
+  userMovieFindParams
+} from '@data/search';
 import type { Controller } from '@domain/protocols';
 import { messages } from '@i18n/index';
 import { errorLogger, messageErrorResponse, notFound, ok, toNumber } from '@main/utils';
+import { findParamsToSelect } from '@main/utils/find-params-to-select';
 import { movieRepository } from '@repository/movie';
 import type { Request, Response } from 'express';
 
@@ -26,22 +33,37 @@ import type { Request, Response } from 'express';
  */
 export const findOneMovieController: Controller =
   () =>
-  async ({ lang, ...request }: Request, response: Response) => {
+  async ({ lang, user, ...request }: Request, response: Response) => {
     try {
-      const payload = await movieRepository.findOne({
-        select: {
-          ...movieFindParams,
-          themeList: themeFindParams,
-          movieCategoryList: { id: true, category: categoryFindParams },
-          movieTagList: { id: true, tag: tagFindParams }
-        },
-        where: { id: toNumber(request.params.id), finishedAt },
-        relations: {
-          themeList: true,
-          movieCategoryList: { category: true },
-          movieTagList: { tag: true }
-        }
-      });
+      const movieId = toNumber(request.params.id);
+
+      const movieFindParamsQuery = findParamsToSelect([
+        [movieFindParams, 'm'],
+        [userMovieFindParams, 'um'],
+        [categoryFindParams, 'c'],
+        [tagFindParams, 't'],
+        [themeFindParams, 'tl']
+      ]);
+
+      const payload = await movieRepository
+        .createQueryBuilder('m')
+        .select([...movieFindParamsQuery, 'mc.id', 'mt.id'])
+        .leftJoinAndSelect('m.userMovieList', 'um', 'um.userId = :userId', {
+          userId: user.id
+        })
+        .leftJoinAndSelect('m.movieCategoryList', 'mc')
+        .leftJoinAndSelect('mc.category', 'c')
+        .leftJoinAndSelect('m.movieTagList', 'mt')
+        .leftJoinAndSelect('mt.tag', 't')
+        .leftJoinAndSelect('m.themeList', 'tl')
+        .where('m.id = :id', { id: movieId })
+        .andWhere('m.finishedAt IS NULL')
+        .andWhere('mc.finishedAt IS NULL')
+        .andWhere('c.finishedAt IS NULL')
+        .andWhere('mt.finishedAt IS NULL')
+        .andWhere('t.finishedAt IS NULL')
+        .andWhere('tl.finishedAt IS NULL')
+        .getOne();
 
       if (payload === null)
         return notFound({ entity: messages[lang].entity.movie, lang, response });

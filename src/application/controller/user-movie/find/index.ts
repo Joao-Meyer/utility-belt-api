@@ -41,19 +41,24 @@ export const findUserMovieController: Controller =
       const { skip, take } = getPagination({ query });
 
       const watchStatus = query.watchStatus as WatchStatus | undefined;
+      const favorite = query.favorite === 'true' ? true : query.favorite === 'false' ? false : null;
 
       const queryBuilder = userMovieRepository
         .createQueryBuilder('um')
         .leftJoinAndSelect('um.movie', 'm')
         .select(movieFindParamsQuery)
         .orderBy('um.watchStatusOrder', 'ASC')
-        .addOrderBy('um.updatedAt', 'ASC')
+        .addOrderBy('um.createdAt', 'DESC')
         .skip(skip)
         .take(take)
         .where('um.userId = :userId', { userId: user.id })
         .andWhere('um.watchStatus != :noneStatus', { noneStatus: WatchStatus.NONE });
 
       if (watchStatus) queryBuilder.andWhere('um.watchStatus = :watchStatus', { watchStatus });
+
+      if (typeof favorite === 'boolean') {
+        queryBuilder.andWhere('um.favorite = :favorite', { favorite });
+      }
 
       const [content, totalElements] = await queryBuilder.getManyAndCount();
 

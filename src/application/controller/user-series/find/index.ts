@@ -42,19 +42,24 @@ export const findUserSeriesController: Controller =
       const { skip, take } = getPagination({ query });
 
       const watchStatus = query.watchStatus as WatchStatus | undefined;
+      const favorite = query.favorite === 'true' ? true : query.favorite === 'false' ? false : null;
 
       const queryBuilder = userSeriesRepository
         .createQueryBuilder('us')
         .select(seriesFindParamsQuery)
         .leftJoinAndSelect('us.series', 's')
         .orderBy('us.watchStatusOrder', 'ASC')
-        .addOrderBy('us.updatedAt', 'ASC')
+        .addOrderBy('us.createdAt', 'DESC')
         .skip(skip)
         .take(take)
         .where('us.userId = :userId', { userId: user.id })
         .andWhere('us.watchStatus != :noneStatus', { noneStatus: WatchStatus.NONE });
 
       if (watchStatus) queryBuilder.andWhere('us.watchStatus = :watchStatus', { watchStatus });
+
+      if (typeof favorite === 'boolean') {
+        queryBuilder.andWhere('us.favorite = :favorite', { favorite });
+      }
 
       const [content, totalElements] = await queryBuilder.getManyAndCount();
 

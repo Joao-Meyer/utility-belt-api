@@ -45,6 +45,7 @@ export const findSeriesController: Controller =
       const categoryIds = getQueryArray(query.categoryIds);
       const tagIds = getQueryArray(query.tagIds);
       const watchStatus = getQueryArray(query.watchStatus);
+      const favorite = query.favorite === 'true' ? true : query.favorite === 'false' ? false : null;
 
       const queryBuilder = seriesRepository
         .createQueryBuilder('s')
@@ -53,8 +54,8 @@ export const findSeriesController: Controller =
           userId: user.id
         })
         .orderBy(
-          `s.${query?.sortBy ?? 'createdAt'}`,
-          query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'ASC'
+          `s.${query?.orderBy ?? 'airedAt'}`,
+          query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'DESC'
         )
         .skip(skip)
         .take(take);
@@ -77,6 +78,15 @@ export const findSeriesController: Controller =
         queryBuilder.andWhere('us.watchStatus IN (:...watchStatus)', {
           watchStatus: watchStatus?.filter((item) => item !== WatchStatus.NONE)
         });
+      }
+
+      if (favorite === true) {
+        queryBuilder.andWhere('us.favorite = :favorite', { favorite });
+      } else if (favorite === false) {
+        queryBuilder.andWhere(
+          'us.favorite = :favorite OR us.favorite IS NULL OR us.id IS NULL OR us.watchStatus = :noneStatus',
+          { favorite, noneStatus: 'NONE' }
+        );
       }
 
       if (watchStatus?.includes(WatchStatus.NONE)) {
