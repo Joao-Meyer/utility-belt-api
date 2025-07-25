@@ -11,7 +11,7 @@
     "prod": "env-cmd -f ./.env.prod ts-node-dev --respawn --transpile-only --clear -r dotenv/config --inspect=0.0.0.0:9229 src/main/server.ts --host",
     "start": "node --max-old-space-size=256 build/main/server.js",
     "check-build": "rmdir /s /q node_modules && npm install --omit=dev && tsc",
-    "migration:create": "npx typeorm migration:create src/migration/create-index",
+    "migration:create": "npx typeorm migration:create src/migration/triggers",
     "migration:generate": "set TS_NODE_DEV=true && typeorm-ts-node-commonjs migration:generate src/migration/migration -d ./src/infra/database/index.ts",
     "migration:run": "set TS_NODE_DEV=true && typeorm-ts-node-commonjs migration:run -d src/infra/database/index.ts",
     "migration:revert": "set TS_NODE_DEV=true && typeorm-ts-node-commonjs migration:revert -d src/infra/database/index.ts",

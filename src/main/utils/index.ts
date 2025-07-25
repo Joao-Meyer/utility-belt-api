@@ -8,6 +8,7 @@ export * from './file-handler';
 export * from './filter';
 export * from './get-current-date';
 export * from './get-date';
+export * from './get-query-array';
 export * from './insert-id';
 export * from './is-uuid';
 export * from './jwt';

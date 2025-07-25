@@ -149,7 +149,6 @@ export const insertMovieController: Controller =
           entityType: HistoryEntityType.MOVIE,
           type: HistoryType.INSERT,
           entityId: movieId,
-          oldData: null,
           newData: {
             title,
             alternativeTitleList,

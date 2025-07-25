@@ -1,5 +1,5 @@
 import { TagEntity } from '@entity/tag';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 
 export const upsertTag = async (
   manager: EntityManager,
@@ -10,7 +10,8 @@ export const upsertTag = async (
   const names = tagList.map((c) => c.name);
 
   const tags = await manager.find(TagEntity, {
-    where: names.map((name) => ({ name }))
+    where: { name: In(names) },
+    select: { id: true }
   });
 
   return tags.map((c) => c.id);

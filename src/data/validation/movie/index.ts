@@ -10,9 +10,9 @@ import {
 } from '@main/utils';
 import { array } from 'yup';
 
-export type movieQueryFields = 'name';
+export type movieQueryFields = 'name' | 'rank' | 'score';
 
-export const movieListQueryFields: movieQueryFields[] = ['name'];
+export const movieListQueryFields: movieQueryFields[] = ['name', 'rank', 'score'];
 
 export const insertMovieSchema = yup.object().shape({
   body: yup.object().shape({

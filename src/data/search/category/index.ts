@@ -4,6 +4,8 @@ import type { FindOptionsSelect } from 'typeorm';
 export const categoryFindParams: FindOptionsSelect<CategoryEntity> = {
   id: true,
   name: true,
+  itemsRate: true,
+  totalItems: true,
 
   // movieTagList: true,
   // seriesTagList: true,

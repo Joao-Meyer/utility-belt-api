@@ -53,7 +53,6 @@ export const insertTagController: Controller =
             entityType: HistoryEntityType.MOVIE,
             type: HistoryType.UPDATE,
             entityId: movieId,
-            oldData: null,
             newData: {
               tagList: [{ id: tagId, name }]
             }
@@ -71,7 +70,6 @@ export const insertTagController: Controller =
             entityType: HistoryEntityType.SERIES,
             type: HistoryType.UPDATE,
             entityId: seriesId,
-            oldData: null,
             newData: {
               tagList: [{ id: tagId, name }]
             }

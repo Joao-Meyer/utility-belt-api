@@ -11,9 +11,15 @@ import {
 } from '@main/utils';
 import { array } from 'yup';
 
-export type seriesQueryFields = 'name';
+export type seriesQueryFields = 'title' | 'rank' | 'score' | 'totalFavorites' | 'totalWatch';
 
-export const seriesListQueryFields: seriesQueryFields[] = ['name'];
+export const seriesListQueryFields: seriesQueryFields[] = [
+  'title',
+  'rank',
+  'score',
+  'totalFavorites',
+  'totalWatch'
+];
 
 const themeListSchema = array().of(
   yup.object().shape({

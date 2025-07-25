@@ -25,10 +25,10 @@ export class EditHistoryEntity {
   public entityId: number;
 
   @Column({ name: 'old_data', type: 'json', nullable: true })
-  public oldData: object | null;
+  public oldData: unknown | null;
 
   @Column({ name: 'new_data', type: 'json' })
-  public newData: object;
+  public newData: unknown;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   public createdAt: Date;

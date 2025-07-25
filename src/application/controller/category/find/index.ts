@@ -1,7 +1,10 @@
-import { categoryFindParams } from '@data/search';
+import { categoryFindParams, movieFindParams, seriesFindParams } from '@data/search';
 import type { categoryQueryFields } from '@data/validation';
 import { categoryListQueryFields } from '@data/validation';
 import type { Controller } from '@domain/protocols';
+import { CategoryEntity } from '@entity/category';
+import { MovieEntity } from '@entity/movie';
+import { SeriesEntity } from '@entity/series';
 import {
   errorLogger,
   getGenericFilter,
@@ -10,6 +13,8 @@ import {
   ok
 } from '@main/utils';
 import { categoryRepository } from '@repository/category';
+import { movieRepository } from '@repository/movie';
+import { seriesRepository } from '@repository/series';
 import type { Request, Response } from 'express';
 
 /**
@@ -32,6 +37,8 @@ import type { Request, Response } from 'express';
  * @tags Category
  * @security BearerAuth
  * @param {string} name.query
+ * @param {integer} seriesQuantity.query
+ * @param {integer} movieQuantity.query
  * @param {integer} page.query
  * @param {integer} limit.query
  * @param {string} orderBy.query - enum:name,createdAt
@@ -46,12 +53,15 @@ export const findCategoryController: Controller =
     try {
       const { skip, take } = getPagination({ query });
 
+      const seriesQuantity = Number(query.seriesQuantity) || 0;
+      const movieQuantity = Number(query.movieQuantity) || 0;
+
       const { orderBy: order, where } = getGenericFilter<categoryQueryFields>({
         list: categoryListQueryFields,
         query
       });
 
-      const [content, totalElements] = await categoryRepository.findAndCount({
+      const [categories, totalElements] = await categoryRepository.findAndCount({
         order,
         select: categoryFindParams,
         skip,
@@ -59,9 +69,63 @@ export const findCategoryController: Controller =
         where
       });
 
+      type ContentProps = CategoryEntity & { movieList: MovieEntity[]; seriesList: SeriesEntity[] };
+
+      const content: ContentProps[] = categories.map((item) => {
+        return { ...item, movieList: [], seriesList: [] };
+      });
+
+      if (seriesQuantity > 0 || movieQuantity > 0)
+        await Promise.all(
+          content.map(async (category) => {
+            const promises: Promise<void>[] = [];
+
+            if (seriesQuantity > 0) {
+              promises.push(
+                seriesRepository
+                  .find({
+                    select: seriesFindParams,
+                    take: seriesQuantity,
+                    relations: { seriesCategoryList: true },
+                    where: { seriesCategoryList: { categoryId: category.id } },
+                    order: { rank: 'DESC' }
+                  })
+                  .then((seriesList) => {
+                    category.seriesList = seriesList;
+                  })
+              );
+            }
+
+            if (movieQuantity > 0) {
+              promises.push(
+                movieRepository
+                  .find({
+                    select: movieFindParams,
+                    take: movieQuantity,
+                    relations: { movieCategoryList: true },
+                    where: { movieCategoryList: { categoryId: category.id } },
+                    order: { rank: 'DESC' }
+                  })
+                  .then((movieList) => {
+                    category.movieList = movieList;
+                  })
+              );
+            }
+
+            await Promise.all(promises);
+          })
+        );
+
       return ok({
         payload: {
-          content,
+          content: content.filter((category) => {
+            if (movieQuantity > 0 && seriesQuantity > 0)
+              return category.movieList?.length > 0 || category.seriesList?.length > 0;
+            else if (movieQuantity > 0) return category.movieList?.length > 0;
+            else if (seriesQuantity > 0) return category.seriesList?.length > 0;
+
+            return true;
+          }),
           totalElements,
           totalPages: Math.ceil(totalElements / take)
         },

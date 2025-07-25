@@ -106,7 +106,6 @@ export const insertSeriesSeasonController: Controller =
           entityType: HistoryEntityType.SERIES,
           type: HistoryType.INSERT,
           entityId: seriesId,
-          oldData: null,
           newData: {
             seriesSeasonList: [
               {

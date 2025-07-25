@@ -87,7 +87,6 @@ export const insertThemeController: Controller =
           entityType: getThemeHistoryData(data).entity,
           type: HistoryType.INSERT,
           entityId: getThemeHistoryData(data).id,
-          oldData: null,
           newData: { themeList: [data] }
         });
       });

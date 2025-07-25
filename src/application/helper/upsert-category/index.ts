@@ -1,5 +1,5 @@
 import { CategoryEntity } from '@entity/category';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 
 export const upsertCategory = async (
   manager: EntityManager,
@@ -16,7 +16,7 @@ export const upsertCategory = async (
   const names = categoryList.map((c) => c.name);
 
   const categories = await manager.find(CategoryEntity, {
-    where: names?.map((name) => ({ name })),
+    where: { name: In(names) },
     select: { id: true }
   });
 

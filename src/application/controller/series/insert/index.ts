@@ -192,7 +192,6 @@ export const insertSeriesController: Controller =
           entityType: HistoryEntityType.SERIES,
           type: HistoryType.INSERT,
           entityId: seriesId,
-          oldData: null,
           newData: {
             title,
             backdropImageUrl,

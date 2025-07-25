@@ -1,17 +1,10 @@
 import { seriesFindParamsQuery } from '@data/search';
-import type { seriesQueryFields } from '@data/validation';
-import { seriesListQueryFields } from '@data/validation';
 import { WatchStatus } from '@domain/enum';
 import type { Controller } from '@domain/protocols';
-import {
-  errorLogger,
-  getGenericFilter,
-  getPagination,
-  messageErrorResponse,
-  ok
-} from '@main/utils';
+import { errorLogger, getPagination, getQueryArray, messageErrorResponse, ok } from '@main/utils';
 import { seriesRepository } from '@repository/series';
 import type { Request, Response } from 'express';
+import { Brackets } from 'typeorm';
 
 /**
  * @typedef {object} FindSeriesPayload
@@ -49,12 +42,9 @@ export const findSeriesController: Controller =
     try {
       const { skip, take } = getPagination({ query });
 
-      const { orderItem } = getGenericFilter<seriesQueryFields>({
-        list: seriesListQueryFields,
-        query
-      });
-
-      console.log({ skip, take });
+      const categoryIds = getQueryArray(query.categoryIds);
+      const tagIds = getQueryArray(query.tagIds);
+      const watchStatus = getQueryArray(query.watchStatus);
 
       const queryBuilder = seriesRepository
         .createQueryBuilder('s')
@@ -62,19 +52,66 @@ export const findSeriesController: Controller =
         .leftJoinAndSelect('s.userSeriesList', 'us', 'us.userId = :userId', {
           userId: user.id
         })
-        .where('us.id IS NULL OR us.watchStatus = :noneStatus', {
-          noneStatus: WatchStatus.NONE
-        })
-        .orderBy(`s.${orderItem?.value ?? 'createdAt'}`, orderItem?.sort ?? 'DESC')
+        .orderBy(
+          `s.${query?.sortBy ?? 'createdAt'}`,
+          query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'ASC'
+        )
         .skip(skip)
         .take(take);
 
+      if (categoryIds?.length) {
+        queryBuilder
+          .leftJoin('s.seriesCategoryList', 'sc')
+          .andWhere('sc.categoryId IN (:...categoryIds)', {
+            categoryIds: categoryIds
+          });
+      }
+
+      if (tagIds?.length) {
+        queryBuilder.leftJoin('s.seriesTagList', 'st').andWhere('st.tagId IN (:...tagIds)', {
+          tagIds: tagIds
+        });
+      }
+
+      if (watchStatus?.filter((item) => item !== WatchStatus.NONE)?.length) {
+        queryBuilder.andWhere('us.watchStatus IN (:...watchStatus)', {
+          watchStatus: watchStatus?.filter((item) => item !== WatchStatus.NONE)
+        });
+      }
+
+      if (watchStatus?.includes(WatchStatus.NONE)) {
+        queryBuilder.andWhere('us.id IS NULL OR us.watchStatus = :noneStatus', {
+          noneStatus: 'NONE'
+        });
+      }
+      if (query?.search) {
+        const searchTerm = `%${query.search}%`;
+
+        queryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.where('s.title ILIKE :searchTerm', { searchTerm })
+              .orWhere('s.originalTitle ILIKE :searchTerm', { searchTerm })
+              .orWhere('s.synopsis ILIKE :searchTerm', { searchTerm })
+              .orWhere(
+                `EXISTS (
+          SELECT 1 FROM unnest(s.alternativeTitleList) alt
+          WHERE alt ILIKE :searchTerm
+        )`,
+                { searchTerm }
+              );
+          })
+        );
+      }
+
       const [content, totalElements] = await queryBuilder.getManyAndCount();
 
-      const formattedContent = content.map((series) => ({
-        ...series,
-        userSeries: series?.userSeriesList?.[0] ?? null
-      }));
+      const formattedContent = content.map((series) => {
+        const { userSeriesList, ...data } = series;
+        return {
+          ...data,
+          userSeries: userSeriesList?.[0] ?? null
+        };
+      });
 
       return ok({
         payload: {

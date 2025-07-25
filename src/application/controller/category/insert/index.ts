@@ -53,7 +53,6 @@ export const insertCategoryController: Controller =
             entityType: HistoryEntityType.MOVIE,
             type: HistoryType.INSERT,
             entityId: movieId,
-            oldData: null,
             newData: {
               categoryList: [{ id: categoryId, name }]
             }
@@ -71,7 +70,6 @@ export const insertCategoryController: Controller =
             entityType: HistoryEntityType.SERIES,
             type: HistoryType.INSERT,
             entityId: seriesId,
-            oldData: null,
             newData: {
               categoryList: [{ id: categoryId, name }]
             }

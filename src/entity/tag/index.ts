@@ -23,6 +23,12 @@ export class TagEntity {
   @OneToMany(() => MovieTagEntity, (movieTag) => movieTag.tag)
   public movieTagList: MovieTagEntity[];
 
+  @Column({ type: 'int', default: 0, name: 'total_items' })
+  public totalItems: number;
+
+  @Column({ type: 'float', default: 0, name: 'items_rate' })
+  public itemsRate: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   public createdAt: Date;
 

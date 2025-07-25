@@ -23,6 +23,12 @@ export class CategoryEntity {
   @OneToMany(() => MovieCategoryEntity, (movieCategory) => movieCategory.category)
   public movieCategoryList: MovieCategoryEntity[];
 
+  @Column({ type: 'int', default: 0, name: 'total_items' })
+  public totalItems: number;
+
+  @Column({ type: 'float', default: 0, name: 'items_rate' })
+  public itemsRate: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   public createdAt: Date;
 

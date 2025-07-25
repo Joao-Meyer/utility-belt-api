@@ -1,16 +1,10 @@
 import { movieFindParamsQuery } from '@data/search';
-import type { movieQueryFields } from '@data/validation';
-import { movieListQueryFields } from '@data/validation';
+import { WatchStatus } from '@domain/enum';
 import type { Controller } from '@domain/protocols';
-import {
-  errorLogger,
-  getGenericFilter,
-  getPagination,
-  messageErrorResponse,
-  ok
-} from '@main/utils';
+import { errorLogger, getPagination, getQueryArray, messageErrorResponse, ok } from '@main/utils';
 import { movieRepository } from '@repository/movie';
 import type { Request, Response } from 'express';
+import { Brackets } from 'typeorm';
 
 /**
  * @typedef {object} FindMoviePayload
@@ -48,10 +42,9 @@ export const findMovieController: Controller =
     try {
       const { skip, take } = getPagination({ query });
 
-      const { orderItem } = getGenericFilter<movieQueryFields>({
-        list: movieListQueryFields,
-        query
-      });
+      const categoryIds = getQueryArray(query.categoryIds);
+      const tagIds = getQueryArray(query.tagIds);
+      const watchStatus = getQueryArray(query.watchStatus);
 
       const queryBuilder = movieRepository
         .createQueryBuilder('m')
@@ -59,19 +52,66 @@ export const findMovieController: Controller =
         .leftJoinAndSelect('m.userMovieList', 'um', 'um.userId = :userId', {
           userId: user.id
         })
-        .where('um.id IS NULL OR um.watchStatus = :noneStatus', {
-          noneStatus: 'NONE'
-        })
-        .orderBy(`m.${orderItem?.value ?? 'createdAt'}`, orderItem?.sort ?? 'DESC')
+        .orderBy(
+          `m.${query?.sortBy ?? 'createdAt'}`,
+          query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'ASC'
+        )
         .skip(skip)
         .take(take);
 
+      if (categoryIds?.length) {
+        queryBuilder
+          .leftJoin('m.movieCategoryList', 'mc')
+          .andWhere('mc.categoryId IN (:...categoryIds)', {
+            categoryIds: categoryIds
+          });
+      }
+
+      if (tagIds?.length) {
+        queryBuilder.leftJoin('m.movieTagList', 'st').andWhere('mt.tagId IN (:...tagIds)', {
+          tagIds: tagIds
+        });
+      }
+
+      if (watchStatus?.filter((item) => item !== WatchStatus.NONE)?.length) {
+        queryBuilder.andWhere('um.watchStatus IN (:...watchStatus)', {
+          watchStatus: watchStatus?.filter((item) => item !== WatchStatus.NONE)
+        });
+      }
+
+      if (watchStatus?.includes(WatchStatus.NONE)) {
+        queryBuilder.andWhere('um.id IS NULL OR um.watchStatus = :noneStatus', {
+          noneStatus: 'NONE'
+        });
+      }
+      if (query?.search) {
+        const searchTerm = `%${query.search}%`;
+
+        queryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.where('m.title ILIKE :searchTerm', { searchTerm })
+              .orWhere('m.originalTitle ILIKE :searchTerm', { searchTerm })
+              .orWhere('m.synopsis ILIKE :searchTerm', { searchTerm })
+              .orWhere(
+                `EXISTS (
+                SELECT 1 FROM unnest(m.alternativeTitleList) alt
+                WHERE alt ILIKE :searchTerm
+              )`,
+                { searchTerm }
+              );
+          })
+        );
+      }
+
       const [content, totalElements] = await queryBuilder.getManyAndCount();
 
-      const formattedContent = content.map((movie) => ({
-        ...movie,
-        userMovie: movie?.userMovieList?.[0] ?? null
-      }));
+      const formattedContent = content.map((movie) => {
+        const { userMovieList, ...data } = movie;
+        return {
+          ...data,
+          userMovie: userMovieList?.[0] ?? null
+        };
+      });
 
       return ok({
         payload: {

@@ -1,9 +1,9 @@
 import { yup } from '@infra/yup';
 import { numberNotRequired, stringRequired } from '@main/utils';
 
-export type categoryQueryFields = 'name';
+export type categoryQueryFields = 'name' | 'totalItems' | 'itemsRate';
 
-export const categoryListQueryFields: categoryQueryFields[] = ['name'];
+export const categoryListQueryFields: categoryQueryFields[] = ['name', 'totalItems', 'itemsRate'];
 
 export const insertCategorySchema = yup.object().shape({
   body: yup.object().shape({

@@ -1,9 +1,9 @@
 import { yup } from '@infra/yup';
 import { numberNotRequired, stringRequired } from '@main/utils';
 
-export type tagQueryFields = 'name';
+export type tagQueryFields = 'name' | 'totalItems' | 'itemsRate';
 
-export const tagListQueryFields: tagQueryFields[] = ['name'];
+export const tagListQueryFields: tagQueryFields[] = ['name', 'totalItems', 'itemsRate'];
 
 export const insertTagSchema = yup.object().shape({
   body: yup.object().shape({
