@@ -18,8 +18,16 @@ interface Body {
 }
 
 /**
+ * @typedef {object} MultipleUpdateUserSeriesItemBody
+ * @property {number} id.required
+ * @property {boolean} favorite
+ * @property {string} watchStatus -enum:NOT_STARTED,WATCHING,WATCHED,DROPPED,WATCH_LATER
+ * @property {number} score
+ */
+
+/**
  * @typedef {object} MultipleUpdateUserSeriesBody
- * @property {array<UpdateUserSeriesBody>} series
+ * @property {array<MultipleUpdateUserSeriesItemBody>} series
  */
 
 /**

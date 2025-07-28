@@ -18,8 +18,16 @@ interface Body {
 }
 
 /**
+ * @typedef {object} MultipleUpdateUserMovieItemBody
+ * @property {number} id.required
+ * @property {boolean} favorite
+ * @property {string} watchStatus -enum:NOT_STARTED,WATCHING,WATCHED,DROPPED,WATCH_LATER
+ * @property {number} score
+ */
+
+/**
  * @typedef {object} MultipleUpdateUserMovieBody
- * @property {array<UpdateUserMovieBody>} movie
+ * @property {array<MultipleUpdateUserMovieItemBody>} movie
  */
 
 /**

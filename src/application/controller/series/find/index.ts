@@ -57,6 +57,7 @@ export const findSeriesController: Controller =
           `s.${query?.orderBy ?? 'airedAt'}`,
           query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'DESC'
         )
+        .addOrderBy('s.createdAt', 'DESC')
         .skip(skip)
         .take(take);
 

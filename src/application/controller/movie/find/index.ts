@@ -57,6 +57,7 @@ export const findMovieController: Controller =
           `m.${query?.orderBy ?? 'airedAt'}`,
           query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'ASC'
         )
+        .addOrderBy('m.createdAt', 'DESC')
         .skip(skip)
         .take(take);
 
