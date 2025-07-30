@@ -12,3 +12,5 @@ export * from './user';
 export * from './user-movie';
 export * from './user-quest';
 export * from './user-series';
+export * from './user-series-episode-watched';
+export * from './user-series-season-progress';
