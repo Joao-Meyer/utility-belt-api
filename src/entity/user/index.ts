@@ -17,6 +17,8 @@ import { UserPersonalQuestEntity } from '../user-personal-quest';
 import { UserPlaylistEntity } from '../user-playlist';
 import { UserQuestEntity } from '../user-quest';
 import { UserSeriesEntity } from '../user-series';
+import { UserSeriesEpisodeWatchedEntity } from '../user-series-episode-watched';
+import { UserSeriesSeasonProgressEntity } from '../user-series-season-progress';
 
 @Index('user_username_key', ['username'], { unique: true })
 @Entity('user')
@@ -68,6 +70,18 @@ export class UserEntity {
 
   @OneToMany(() => PlaylistEntity, (playlist) => playlist.owner)
   public myPlaylistList: PlaylistEntity[];
+
+  @OneToMany(
+    () => UserSeriesEpisodeWatchedEntity,
+    (userSeriesEpisodeWatched) => userSeriesEpisodeWatched.user
+  )
+  public userSeriesEpisodeWatchedList: UserSeriesEpisodeWatchedEntity[];
+
+  @OneToMany(
+    () => UserSeriesSeasonProgressEntity,
+    (userSeriesSeasonProgress) => userSeriesSeasonProgress.user
+  )
+  public userSeriesSeasonProgressList: UserSeriesSeasonProgressEntity[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   public createdAt: Date;

@@ -37,6 +37,9 @@ export class UserSeriesEntity {
   @Column({ type: 'int', name: 'watch_status_order', default: 0 })
   public watchStatusOrder: number;
 
+  @Column({ type: 'int', name: 'total_season_watched', default: 0 })
+  public totalSeasonWatched: number;
+
   @Column({ type: 'float', nullable: true, default: null })
   public score: number | null;
 

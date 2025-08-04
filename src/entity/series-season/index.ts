@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -14,6 +15,9 @@ import { SeriesSeasonEpisodeEntity } from '../series-season-episode';
 import { ThemeEntity } from '../theme';
 import { UserSeriesSeasonProgressEntity } from '../user-series-season-progress';
 
+@Index('season_series_season_number_unique_index', ['seasonNumber', 'seriesId'], {
+  unique: true
+})
 @Entity('series_season')
 export class SeriesSeasonEntity {
   @PrimaryGeneratedColumn({ type: 'integer' })

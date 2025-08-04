@@ -1,12 +1,14 @@
-import { finishedAt, formatSeason } from '@application/helper';
+import { formatSeason } from '@application/helper';
 import {
   seriesSeasonEpisodeFindParams,
   seriesSeasonFindParams,
-  themeFindParams
+  userSeriesEpisodeWatchedFindParams,
+  userSeriesSeasonProgressFindParams
 } from '@data/search';
 import type { Controller } from '@domain/protocols';
 import { messages } from '@i18n/index';
 import { errorLogger, messageErrorResponse, notFound, ok, toNumber } from '@main/utils';
+import { findParamsToSelect } from '@main/utils/find-params-to-select';
 import { seriesSeasonRepository } from '@repository/series-season';
 import type { Request, Response } from 'express';
 
@@ -30,20 +32,41 @@ import type { Request, Response } from 'express';
  */
 export const findOneSeriesSeasonController: Controller =
   () =>
-  async ({ lang, ...request }: Request, response: Response) => {
+  async ({ lang, user, ...request }: Request, response: Response) => {
     try {
-      const payload = await seriesSeasonRepository.findOne({
-        select: {
-          ...seriesSeasonFindParams,
-          seriesSeasonEpisodeList: seriesSeasonEpisodeFindParams,
-          themeList: themeFindParams
-        },
-        where: { id: toNumber(request.params.id), finishedAt },
-        relations: {
-          themeList: true,
-          seriesSeasonEpisodeList: true
-        }
-      });
+      const seasonId = toNumber(request.params.id);
+
+      const findParamsQuery = findParamsToSelect([
+        [seriesSeasonFindParams, 'ss'],
+        [seriesSeasonEpisodeFindParams, 'sse'],
+        [userSeriesSeasonProgressFindParams, 'ssp'],
+        [userSeriesEpisodeWatchedFindParams, 'sew']
+      ]);
+
+      const payload = await seriesSeasonRepository
+        .createQueryBuilder('ss')
+        .select(findParamsQuery)
+        .leftJoinAndSelect('ss.seriesSeasonEpisodeList', 'sse', 'sse.finishedAt IS NULL')
+        .leftJoinAndSelect(
+          'ss.userSeriesSeasonProgressList',
+          'ssp',
+          'ssp.userId = :userId AND ssp.finishedAt IS NULL',
+          {
+            userId: user.id
+          }
+        )
+        .leftJoinAndSelect(
+          'sse.userSeriesEpisodeWatchedList',
+          'sew',
+          'sew.userId = :userId AND sew.finishedAt IS NULL',
+          {
+            userId: user.id
+          }
+        )
+        .where('ss.id = :id', { id: seasonId })
+        .andWhere('ss.finishedAt IS NULL')
+        .orderBy('sse.episodeNumber', 'ASC')
+        .getOne();
 
       if (payload === null)
         return notFound({ entity: messages[lang].entity.seriesSeason, lang, response });

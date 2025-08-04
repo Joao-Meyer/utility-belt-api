@@ -5,6 +5,7 @@ export default (inputRouter: Router): void => {
   const router = Router();
 
   router.post('/', insertUserController());
+
   router.get('/teste', async (req, res) => {
     res.json({ a: 'a' });
   });

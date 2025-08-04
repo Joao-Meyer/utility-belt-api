@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { WatchStatus } from '../../domain/enum';
 import { SeriesSeasonEntity } from '../series-season';
+import { UserEntity } from '../user';
 import { UserSeriesEntity } from '../user-series';
 import { UserSeriesEpisodeWatchedEntity } from '../user-series-episode-watched';
 
@@ -22,6 +23,9 @@ import { UserSeriesEpisodeWatchedEntity } from '../user-series-episode-watched';
   ['seriesSeasonId', 'userSeriesId'],
   { unique: true }
 )
+@Index('season_progress_series_season_user_id_unique_index', ['userId', 'seriesSeasonId'], {
+  unique: true
+})
 @Entity('user_series_season_progress')
 export class UserSeriesSeasonProgressEntity {
   @PrimaryGeneratedColumn({ type: 'integer' })
@@ -66,6 +70,17 @@ export class UserSeriesSeasonProgressEntity {
     (userSeriesEpisodeWatched) => userSeriesEpisodeWatched.userSeriesSeasonProgress
   )
   public userSeriesEpisodeWatchedList: UserSeriesEpisodeWatchedEntity[];
+
+  @Column({ type: 'integer', name: 'user_id' })
+  public userId: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.userSeriesSeasonProgressList, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    nullable: false
+  })
+  @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])
+  public user: UserEntity;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   public createdAt: Date;

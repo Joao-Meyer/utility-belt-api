@@ -5,7 +5,7 @@ import {
   upsertMultipleUserSeriesController,
   upsertUserSeriesController
 } from '@application/controller/user-series';
-import { upsertUserSeriesEpisodeWatchedController } from '@application/controller/user-series-episode-watched';
+import { upsertMultipleUserSeriesEpisodeWatchedController } from '@application/controller/user-series-episode-watched';
 import { upsertMultipleUserSeriesSeasonProgressController } from '@application/controller/user-series-season-progress';
 import { Router } from 'express';
 
@@ -17,7 +17,10 @@ export default (inputRouter: Router): void => {
   router.get('/:seriesId', findOneUserSeriesController());
 
   router.post('/:seriesId/season-progress', upsertMultipleUserSeriesSeasonProgressController());
-  router.post('/:seriesId/episode-watched/:episodeId', upsertUserSeriesEpisodeWatchedController());
+  router.post(
+    '/:seriesId/season/:seasonId/episode-watched',
+    upsertMultipleUserSeriesEpisodeWatchedController()
+  );
 
   router.post('/:seriesId', upsertUserSeriesController());
   router.delete('/:seriesId', deleteUserSeriesController());

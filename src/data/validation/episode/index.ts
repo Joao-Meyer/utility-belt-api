@@ -1,9 +1,6 @@
-import { SeasonStatus } from '@domain/enum';
 import { yup } from '@infra/yup';
 import {
   dateNotRequired,
-  enumTypeNotRequired,
-  enumTypeRequired,
   numberNotRequired,
   numberRequired,
   stringNotRequired,
@@ -19,27 +16,28 @@ export const seriesSeasonEpisodeListQueryFields: seriesSeasonEpisodeQueryFields[
 
 export const insertSeriesSeasonEpisodeSchema = yup.object().shape({
   body: yup.object().shape({
-    name: stringRequired(255),
-    synopsis: stringNotRequired(),
-    imageUrl: stringRequired(),
+    title: stringRequired(255),
+    seasonId: numberRequired().integer(),
     tmdbId: numberRequired(),
-    totalEpisodes: numberRequired(),
-    status: enumTypeRequired({ data: SeasonStatus }),
+    synopsis: stringNotRequired(),
+    imageUrl: stringNotRequired(),
+    episodeNumber: numberRequired(),
     seasonNumber: numberRequired(),
-    airedAt: dateNotRequired(),
-    airedEndAt: dateNotRequired()
+    duration: numberRequired(),
+    airedAt: dateNotRequired()
   })
 });
 
 export const updateSeriesSeasonEpisodeSchema = yup.object().shape({
   body: yup.object().shape({
-    name: stringNotRequired(255),
+    title: stringNotRequired(255),
+    seasonId: numberNotRequired().integer(),
+    tmdbId: numberNotRequired(),
     synopsis: stringNotRequired(),
     imageUrl: stringNotRequired(),
-    totalEpisodes: numberNotRequired(),
-    status: enumTypeNotRequired({ data: SeasonStatus }),
+    episodeNumber: numberNotRequired(),
     seasonNumber: numberNotRequired(),
-    airedAt: dateNotRequired(),
-    airedEndAt: dateNotRequired()
+    duration: numberNotRequired(),
+    airedAt: dateNotRequired()
   })
 });

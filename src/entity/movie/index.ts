@@ -50,7 +50,7 @@ export class MovieEntity {
   @Column({ type: 'text', default: '' })
   public synopsis: string;
 
-  @Column({ type: 'int', default: -1 })
+  @Column({ type: 'int', default: 0 })
   public rank: number;
 
   @Column({ type: 'float', default: 0 })

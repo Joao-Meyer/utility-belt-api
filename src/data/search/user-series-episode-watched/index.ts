@@ -8,6 +8,7 @@ export const userSeriesEpisodeWatchedFindParams: FindOptionsSelect<UserSeriesEpi
 
     seriesSeasonEpisodeId: true,
     userSeriesSeasonProgressId: true,
+    userId: true,
     // seriesSeasonEpisode: true,
     // userSeriesSeasonProgress: true,
 

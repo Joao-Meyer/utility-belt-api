@@ -1,1 +1,1 @@
-export * from './upsert';
+export * from './multiple-upsert';

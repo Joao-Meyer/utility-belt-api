@@ -6,6 +6,7 @@ export const userSeriesSeasonProgressFindParams: FindOptionsSelect<UserSeriesSea
     id: true,
     watchStatus: true,
 
+    userId: true,
     seriesSeasonId: true,
     userSeriesId: true,
     // seriesSeason: true,

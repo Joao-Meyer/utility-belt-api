@@ -5,7 +5,8 @@ import {
   seriesSeasonFindParams,
   tagFindParams,
   themeFindParams,
-  userSeriesFindParams
+  userSeriesFindParams,
+  userSeriesSeasonProgressFindParams
 } from '@data/search';
 import type { Controller } from '@domain/protocols';
 import { messages } from '@i18n/index';
@@ -40,6 +41,7 @@ export const findOneSeriesController: Controller =
 
       const seriesFindParamsQuery = findParamsToSelect([
         [seriesFindParams, 's'],
+        [userSeriesSeasonProgressFindParams, 'ssp'],
         [userSeriesFindParams, 'us'],
         [categoryFindParams, 'c'],
         [tagFindParams, 't'],
@@ -53,20 +55,24 @@ export const findOneSeriesController: Controller =
         .leftJoinAndSelect('s.userSeriesList', 'us', 'us.userId = :userId', {
           userId: user.id
         })
-        .leftJoinAndSelect('s.seriesCategoryList', 'sc')
+        .leftJoinAndSelect('s.seriesCategoryList', 'sc', 'sc.finishedAt IS NULL')
         .leftJoinAndSelect('sc.category', 'c')
-        .leftJoinAndSelect('s.seriesTagList', 'st')
+        .leftJoinAndSelect('s.seriesTagList', 'st', 'st.finishedAt IS NULL')
         .leftJoinAndSelect('st.tag', 't')
-        .leftJoinAndSelect('s.themeList', 'tl')
-        .leftJoinAndSelect('s.seriesSeasonList', 'ss')
+        .leftJoinAndSelect('s.themeList', 'tl', 'tl.finishedAt IS NULL')
+        .leftJoinAndSelect('s.seriesSeasonList', 'ss', 'ss.finishedAt IS NULL')
+        .leftJoinAndSelect(
+          'ss.userSeriesSeasonProgressList',
+          'ssp',
+          'ssp.userId = :userId AND ssp.finishedAt IS NULL',
+          {
+            userId: user.id
+          }
+        )
         .where('s.id = :id', { id: seriesId })
         .andWhere('s.finishedAt IS NULL')
-        .andWhere('sc.finishedAt IS NULL')
-        .andWhere('c.finishedAt IS NULL')
-        .andWhere('st.finishedAt IS NULL')
         .andWhere('t.finishedAt IS NULL')
-        .andWhere('tl.finishedAt IS NULL')
-        .andWhere('ss.finishedAt IS NULL')
+        .andWhere('c.finishedAt IS NULL')
         .getOne();
 
       if (payload === null)

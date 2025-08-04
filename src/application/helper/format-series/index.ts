@@ -4,8 +4,12 @@ import { formatSeason } from '../format-season';
 export const formatSeries = (series: SeriesEntity): unknown => {
   const { seriesTagList, seriesCategoryList, seriesSeasonList, userSeriesList, ...rest } = series;
 
-  const categoryList = seriesCategoryList?.map((item) => item.category);
-  const tagList = seriesTagList?.map((item) => item.tag);
+  const tagList = seriesTagList?.filter((item) => item?.tag)?.map((item) => item.tag);
+
+  const categoryList = seriesCategoryList
+    ?.filter((item) => item?.category)
+    ?.map((item) => item.category);
+
   const seasonList = seriesSeasonList
     ?.map((item) => formatSeason(item))
     .sort((a, b) => a.seasonNumber - b.seasonNumber);

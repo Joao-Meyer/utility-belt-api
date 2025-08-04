@@ -4,6 +4,8 @@ export * from './format-season';
 export * from './format-series';
 export * from './get-different-object';
 export * from './get-theme-history-data';
+export * from './get-user-series-season';
+export * from './get-user-series-season-progress';
 export * from './get-watch-status-order';
 export * from './insert-season';
 export * from './playlist';

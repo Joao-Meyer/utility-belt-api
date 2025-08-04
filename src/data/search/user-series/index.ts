@@ -7,6 +7,7 @@ export const userSeriesFindParams: FindOptionsSelect<UserSeriesEntity> = {
   score: true,
   watchStatus: true,
   watchStatusOrder: true,
+  totalSeasonWatched: true,
 
   seriesId: true,
   userId: true,

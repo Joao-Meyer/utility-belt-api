@@ -51,18 +51,15 @@ export const findOneMovieController: Controller =
         .leftJoinAndSelect('m.userMovieList', 'um', 'um.userId = :userId', {
           userId: user.id
         })
-        .leftJoinAndSelect('m.movieCategoryList', 'mc')
+        .leftJoinAndSelect('m.movieCategoryList', 'mc', 'mc.finishedAt IS NULL')
         .leftJoinAndSelect('mc.category', 'c')
-        .leftJoinAndSelect('m.movieTagList', 'mt')
+        .leftJoinAndSelect('m.movieTagList', 'mt', 'mt.finishedAt IS NULL')
         .leftJoinAndSelect('mt.tag', 't')
-        .leftJoinAndSelect('m.themeList', 'tl')
+        .leftJoinAndSelect('m.themeList', 'tl', 'tl.finishedAt IS NULL')
         .where('m.id = :id', { id: movieId })
         .andWhere('m.finishedAt IS NULL')
-        .andWhere('mc.finishedAt IS NULL')
         .andWhere('c.finishedAt IS NULL')
-        .andWhere('mt.finishedAt IS NULL')
         .andWhere('t.finishedAt IS NULL')
-        .andWhere('tl.finishedAt IS NULL')
         .getOne();
 
       if (payload === null)

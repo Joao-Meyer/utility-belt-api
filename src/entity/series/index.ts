@@ -63,7 +63,7 @@ export class SeriesEntity {
   @Column({ type: 'int', name: 'total_seasons' })
   public totalSeasons: number;
 
-  @Column({ type: 'int', default: -1 })
+  @Column({ type: 'int', default: 0 })
   public rank: number;
 
   @Column({ type: 'float', default: 0 })

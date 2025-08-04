@@ -88,7 +88,7 @@ export const findTagController: Controller =
                     take: seriesQuantity,
                     relations: { seriesTagList: true },
                     where: { seriesTagList: { tagId: tag.id } },
-                    order: { rank: 'DESC' }
+                    order: { score: 'DESC' }
                   })
                   .then((seriesList) => {
                     tag.seriesList = seriesList;
@@ -104,7 +104,7 @@ export const findTagController: Controller =
                     take: movieQuantity,
                     relations: { movieTagList: true },
                     where: { movieTagList: { tagId: tag.id } },
-                    order: { rank: 'DESC' }
+                    order: { score: 'DESC' }
                   })
                   .then((movieList) => {
                     tag.movieList = movieList;

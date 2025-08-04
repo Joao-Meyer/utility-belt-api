@@ -1,5 +1,5 @@
 import { yup } from '@infra/yup';
-import { booleanRequired, numberRequired } from '@main/utils';
+import { booleanNotRequired, booleanRequired, numberRequired } from '@main/utils';
 import { array } from 'yup';
 
 export const updateMultipleUserSeriesSeasonProgressSchema = yup.object().shape({
@@ -9,6 +9,7 @@ export const updateMultipleUserSeriesSeasonProgressSchema = yup.object().shape({
       yup.object().shape({
         id: numberRequired().integer()
       })
-    )
+    ),
+    allSeason: booleanNotRequired()
   })
 });
