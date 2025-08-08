@@ -1,7 +1,7 @@
+import { env } from './config/env';
 import './config/module-alias';
 
 import { DataSource } from '@infra/database';
-import { env } from '@main/config';
 import { errorLogger } from '@main/utils';
 
 DataSource.initialize()

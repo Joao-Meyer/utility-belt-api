@@ -101,6 +101,15 @@ export const upsertMultipleUserSeriesEpisodeWatchedController: Controller =
               watchStatusOrder: getWatchStatusOrder(WatchStatus.WATCHING)
             }
           );
+        else if (watch === true && userSeries.watchStatus === WatchStatus.NONE)
+          await manager.update(
+            UserSeriesEntity,
+            { id: userSeries.id },
+            {
+              watchStatus: WatchStatus.WATCHING,
+              watchStatusOrder: getWatchStatusOrder(WatchStatus.WATCHING)
+            }
+          );
 
         if (watch === false && userSeriesSeasonProgress.watchStatus === WatchStatus.WATCHED)
           await manager.update(

@@ -22,17 +22,18 @@ import type { Request, Response } from 'express';
  */
 
 /**
- * GET /playlist/{id}
+ * GET /playlist/{parentId}/{id}
  * @summary Find one Playlist
  * @tags Playlist
  * @security BearerAuth
  * @param {integer} id.path.required
+ * @param {integer} parentId.path.required
  * @return {FindOnePlaylistResponse} 200 - Successful response - application/json
  * @return {BadRequest} 400 - Bad request response - application/json
  * @return {UnauthorizedRequest} 401 - Unauthorized response - application/json
  * @return {NotFoundRequest} 404 - Not found response - application/json
  */
-export const findOnePlaylistController: Controller =
+export const findOnePlaylistParentController: Controller =
   () =>
   async ({ lang, user, ...request }: Request, response: Response) => {
     try {
@@ -63,13 +64,11 @@ export const findOnePlaylistController: Controller =
         .leftJoinAndSelect('p.playlistItemList', 'pi')
         .leftJoinAndSelect('pi.series', 's')
         .leftJoinAndSelect('pi.movie', 'm')
-        .andWhere(
-          'p.id = :id AND p.parentId IS NULL AND (p.visibility = :visibility OR up.id IS NOT NULL)',
-          {
-            visibility: PlaylistVisibility.PUBLIC,
-            id: toNumber(request.params.id)
-          }
-        )
+        .andWhere('p.id = :id AND p.parentId = :parentId', {
+          visibility: PlaylistVisibility.PUBLIC,
+          id: toNumber(request.params.id),
+          parentId: toNumber(request.params.parentId)
+        })
         .andWhere('p.finishedAt IS NULL')
         .orderBy('sp.order', 'DESC')
         .addOrderBy('pi.order', 'DESC');

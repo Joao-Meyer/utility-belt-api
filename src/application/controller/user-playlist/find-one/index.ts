@@ -1,6 +1,7 @@
 import { playlistFindParams, userFindParams, userPlaylistFindParams } from '@data/search';
 import type { Controller } from '@domain/protocols';
-import { errorLogger, getPagination, messageErrorResponse, ok } from '@main/utils';
+import { messages } from '@i18n/index';
+import { errorLogger, messageErrorResponse, notFound, ok, toNumber } from '@main/utils';
 import { findParamsToSelect } from '@main/utils/find-params-to-select';
 import { userPlaylistRepository } from '@repository/user-playlist';
 import type { Request, Response } from 'express';
@@ -20,58 +21,43 @@ import type { Request, Response } from 'express';
  */
 
 /**
- * GET /user-playlist
+ * GET /user-playlist/{id}
  * @summary Find User Playlists
  * @tags User Playlist
  * @security BearerAuth
- * @param {string} name.query
- * @param {integer} page.query
- * @param {integer} limit.query
- * @param {string} startDate.query (Ex: 2024-01-01).
- * @param {string} endDate.query (Ex: 2024-01-01).
- * @param {string} orderBy.query - enum:name,createdAt
- * @param {string} sort.query - enum:asc,desc
+ * @param {integer} id.path.required
  * @return {FindUserPlaylistResponse} 200 - Successful response - application/json
  * @return {BadRequest} 400 - Bad request response - application/json
  * @return {UnauthorizedRequest} 401 - Unauthorized response - application/json
  */
-export const findUserPlaylistController: Controller =
+export const findOneUserPlaylistController: Controller =
   () =>
-  async ({ query, lang, user }: Request, response: Response) => {
+  async ({ lang, user, ...request }: Request, response: Response) => {
     try {
-      const { skip, take } = getPagination({ query });
-
       const findParamsQuery = findParamsToSelect([
         [userPlaylistFindParams, 'up'],
         [playlistFindParams, 'p'],
-        [userFindParams, 'o']
+        [userFindParams, 'o'],
+        [playlistFindParams, 'sp']
       ]);
 
       const queryBuilder = userPlaylistRepository
         .createQueryBuilder('up')
         .select(findParamsQuery)
         .innerJoinAndSelect('up.playlist', 'p', 'p.finishedAt IS NULL')
+        .leftJoinAndSelect('p.subPlaylistList', 'sp', 'sp.finishedAt IS NULL')
         .leftJoinAndSelect('p.owner', 'o')
-        .where('up.userId = :userId', { userId: user.id })
+        .where('up.id = :id', { id: toNumber(request.params.id) })
+        .andWhere('up.userId = :userId', { userId: user.id })
         .andWhere('up.finishedAt IS NULL')
-        .orderBy(
-          `up.${query?.orderBy ?? 'createdAt'}`,
-          query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'DESC'
-        )
-        .skip(skip)
-        .take(take);
+        .orderBy(`sp.order`, 'DESC');
 
-      const [content, totalElements] = await queryBuilder.getManyAndCount();
+      const payload = await queryBuilder.getOne();
 
-      return ok({
-        payload: {
-          content,
-          totalElements,
-          totalPages: Math.ceil(totalElements / take)
-        },
-        lang,
-        response
-      });
+      if (payload === null)
+        return notFound({ entity: messages[lang].entity.playlist, lang, response });
+
+      return ok({ payload, lang, response });
     } catch (error) {
       errorLogger(error);
 

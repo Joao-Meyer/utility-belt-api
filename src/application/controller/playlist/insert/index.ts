@@ -37,7 +37,9 @@ export const insertPlaylistController: Controller =
     try {
       await insertPlaylistSchema.validate(request, { abortEarly: false });
 
-      const { imageUrl, name, visibility, parentId } = request.body as Body;
+      const { imageUrl: image, name, visibility, parentId } = request.body as Body;
+
+      const imageUrl = image === 'null' ? null : image;
 
       await DataSource.transaction(async (manager) => {
         const playlistId = insertId(

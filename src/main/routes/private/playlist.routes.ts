@@ -1,6 +1,7 @@
 import {
   deletePlaylistController,
   findOnePlaylistController,
+  findOnePlaylistParentController,
   findPlaylistController,
   insertPlaylistController,
   updatePlaylistController
@@ -10,15 +11,29 @@ import {
   insertPlaylistItemController,
   updatePlaylistItemController
 } from '@application/controller/playlist-item';
+import { handleMulterError, insertImage, uploadFilesMiddleware } from '@main/utils';
 import { Router } from 'express';
 
 export default (inputRouter: Router): void => {
   const router = Router();
 
-  router.post('/', insertPlaylistController());
+  router.post(
+    '/',
+    uploadFilesMiddleware,
+    handleMulterError,
+    insertImage(),
+    insertPlaylistController()
+  );
   router.get('/', findPlaylistController());
   router.get('/:id', findOnePlaylistController());
-  router.put('/:id', updatePlaylistController());
+  router.get('/:parentId/:id', findOnePlaylistParentController());
+  router.put(
+    '/:id',
+    uploadFilesMiddleware,
+    handleMulterError,
+    insertImage(),
+    updatePlaylistController()
+  );
   router.delete('/:id', deletePlaylistController());
 
   router.post('/:playlistId/item', insertPlaylistItemController());

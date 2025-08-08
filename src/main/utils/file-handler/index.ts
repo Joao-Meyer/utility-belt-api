@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Controller } from '@domain/protocols';
+import { uploadFileToAzure } from '@infra/azure-blob';
 import type { NextFunction, Request, Response } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import multer, { MulterError, diskStorage } from 'multer';
@@ -43,7 +44,7 @@ export const uploadFilesMiddleware = multer({
   fileFilter,
   limits: { fileSize: MB * 1024 * 1024 },
   storage
-}).array('images');
+}).array('image');
 
 export const handleMulterError = (
   err: Error,
@@ -59,21 +60,32 @@ export const handleMulterError = (
   else next();
 };
 
+const imagesToAzure = async (filePath: string): Promise<string | null> => {
+  try {
+    const url = uploadFileToAzure({ azurePath: `be-watch/${filePath}`, filepath: filePath });
+
+    return url;
+  } catch {
+    return null;
+  }
+};
+
 export const insertImage: Controller =
-  () => (request: Request, response: Response, next: NextFunction) => {
+  () => async (request: Request, response: Response, next: NextFunction) => {
     try {
       const imageList: string[] = [];
 
       if (Array.isArray(request?.files)) {
-        request.files.forEach((item) => {
-          imageList.push(
-            `${request.protocol}://${request.get('host') ?? ''}/static/uploads/${item.filename}`
-          );
-        });
+        for await (const item of request.files) {
+          const url = await imagesToAzure(item.filename);
+          if (url) imageList.push(url);
+        }
       }
 
       if (imageList?.length)
-        Object.assign(request, { body: { ...request.body, images: imageList } });
+        Object.assign(request, {
+          body: { ...request.body, imageList: imageList, imageUrl: imageList[0] }
+        });
 
       next();
     } catch (error) {

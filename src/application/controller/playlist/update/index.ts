@@ -1,8 +1,9 @@
-import { canUpdatePlaylist } from '@application/helper';
+import { canUpdatePlaylist, finishedAt } from '@application/helper';
 import { updatePlaylistSchema } from '@data/validation';
 import { PlaylistVisibility } from '@domain/enum';
 import type { Controller } from '@domain/protocols';
 import { messages } from '@i18n/index';
+import { deleteFileFromAzureByUrl } from '@infra/azure-blob';
 import { errorLogger, forbidden, messageErrorResponse, ok, toNumber } from '@main/utils';
 import { playlistRepository } from '@repository/playlist';
 import type { Request, Response } from 'express';
@@ -40,13 +41,29 @@ export const updatePlaylistController: Controller =
     try {
       await updatePlaylistSchema.validate(request, { abortEarly: false });
 
-      const { imageUrl, name, parentId, visibility } = request.body as Body;
+      const { imageUrl: image, name, parentId, visibility } = request.body as Body;
+
+      const imageUrl = String(image) === 'null' ? null : image;
 
       if (!(await canUpdatePlaylist(toNumber(request.params.id), request.user.id)))
         return forbidden({ lang, response });
 
+      if (image !== undefined) {
+        const playlist = await playlistRepository.findOne({
+          where: { id: toNumber(request.params.id), ownerId: request.user.id, finishedAt }
+        });
+
+        if (typeof playlist?.imageUrl === 'string') {
+          try {
+            await deleteFileFromAzureByUrl(playlist.imageUrl);
+          } catch {
+            //
+          }
+        }
+      }
+
       await playlistRepository.update(
-        { id: toNumber(request.params.id), ownerId: request.user.id },
+        { id: toNumber(request.params.id), ownerId: request.user.id, finishedAt },
         { imageUrl, name, parentId, visibility }
       );
 

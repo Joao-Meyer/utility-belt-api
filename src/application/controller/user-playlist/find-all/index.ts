@@ -1,28 +1,28 @@
-import { playlistFindParamsQuery } from '@data/search';
-import { PlaylistVisibility } from '@domain/enum';
+import { playlistFindParams, userFindParams, userPlaylistFindParams } from '@data/search';
 import type { Controller } from '@domain/protocols';
 import { errorLogger, getPagination, messageErrorResponse, ok } from '@main/utils';
-import { playlistRepository } from '@repository/playlist';
+import { findParamsToSelect } from '@main/utils/find-params-to-select';
+import { userPlaylistRepository } from '@repository/user-playlist';
 import type { Request, Response } from 'express';
 
 /**
- * @typedef {object} FindPlaylistPayload
- * @property {array<Playlist>} content
+ * @typedef {object} FindUserPlaylistPayload
+ * @property {array<UserPlaylist>} content
  * @property {number} totalElements
  * @property {number} totalPages
  */
 
 /**
- * @typedef {object} FindPlaylistResponse
+ * @typedef {object} FindUserPlaylistResponse
  * @property {string} message
  * @property {string} status
- * @property {FindPlaylistPayload} payload
+ * @property {FindUserPlaylistPayload} payload
  */
 
 /**
- * GET /playlist
- * @summary Find Playlists
- * @tags Playlist
+ * GET /user-playlist/all
+ * @summary Find User Playlists
+ * @tags User Playlist
  * @security BearerAuth
  * @param {string} name.query
  * @param {integer} page.query
@@ -31,37 +31,35 @@ import type { Request, Response } from 'express';
  * @param {string} endDate.query (Ex: 2024-01-01).
  * @param {string} orderBy.query - enum:name,createdAt
  * @param {string} sort.query - enum:asc,desc
- * @return {FindPlaylistResponse} 200 - Successful response - application/json
+ * @return {FindUserPlaylistResponse} 200 - Successful response - application/json
  * @return {BadRequest} 400 - Bad request response - application/json
  * @return {UnauthorizedRequest} 401 - Unauthorized response - application/json
  */
-export const findPlaylistController: Controller =
+export const findUserPlaylistAllController: Controller =
   () =>
-  async ({ query, user, lang }: Request, response: Response) => {
+  async ({ query, lang, user }: Request, response: Response) => {
     try {
       const { skip, take } = getPagination({ query });
 
-      const queryBuilder = playlistRepository
-        .createQueryBuilder('p')
-        .select([...playlistFindParamsQuery, 'up.id'])
-        .leftJoinAndSelect(
-          'p.userPlaylistList',
-          'up',
-          'up.userId = :userId AND up.finishedAt IS NULL',
-          {
-            userId: user.id
-          }
-        )
+      const findParamsQuery = findParamsToSelect([
+        [userPlaylistFindParams, 'up'],
+        [playlistFindParams, 'p'],
+        [userFindParams, 'o'],
+        [playlistFindParams, 'sp']
+      ]);
+
+      const queryBuilder = userPlaylistRepository
+        .createQueryBuilder('up')
+        .select(findParamsQuery)
+        .innerJoinAndSelect('up.playlist', 'p', 'p.finishedAt IS NULL')
+        .leftJoinAndSelect('p.subPlaylistList', 'sp', 'sp.finishedAt IS NULL')
         .leftJoinAndSelect('p.owner', 'o')
-        .where('p.finishedAt IS NULL')
-        .andWhere('p.parentId IS NULL')
-        .andWhere('p.visibility = :visibility', { visibility: PlaylistVisibility.PUBLIC })
-        .andWhere('up.id IS NULL')
+        .where('up.userId = :userId', { userId: user.id })
+        .andWhere('up.finishedAt IS NULL')
         .orderBy(
-          `p.${query?.orderBy ?? 'order'}`,
+          `up.${query?.orderBy ?? 'createdAt'}`,
           query?.sort === 'ASC' || query?.sort === 'DESC' ? query?.sort : 'DESC'
         )
-        .addOrderBy('p.createdAt', 'DESC')
         .skip(skip)
         .take(take);
 

@@ -1,47 +1,56 @@
-// import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob';
-// import { defaultFolder, deleteFiles } from '@main/utils';
-// import { env } from '@main/config';
+import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { env } from '@main/config';
+import { defaultFolder, deleteFiles, errorLogger } from '@main/utils';
+import { lookup as getMimeType } from 'mime-types';
+import path from 'path';
 
-// const accountName = env.AZ_BLOB_ACCOUNT_NAME;
-// const accountKey = env.AZ_BLOB_ACCOUNT_KEY;
-// const azureUrl = env.AZ_BLOB_URL;
+const { accountKey, accountName, containerName, url } = env.AZURE_BLOB;
 
-// const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
-// const blobServiceClient = new BlobServiceClient(azureUrl, sharedKeyCredential);
+const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
+const blobServiceClient = new BlobServiceClient(url, sharedKeyCredential);
 
-// interface uploadFileToAzureProps {
-//   azurePath: string;
-//   fileName?: string;
-//   filePath?: string;
-//   containerName: string;
-// }
+interface uploadFileToAzureProps {
+  azurePath: string;
+  filepath: string;
+}
 
-// export const uploadFileToAzure = async ({
-//   azurePath,
-//   containerName,
-//   fileName,
-//   filePath
-// }: uploadFileToAzureProps): Promise<string | null> => {
-//   try {
-//     const containerClient = blobServiceClient.getContainerClient(containerName);
-//     const blockBlobClient = containerClient.getBlockBlobClient(
-//       azurePath.replace(`${azureUrl}${containerName}/`, '')
-//     );
+export const uploadFileToAzure = async ({
+  azurePath,
+  filepath
+}: uploadFileToAzureProps): Promise<string | null> => {
+  try {
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blockBlobClient = containerClient.getBlockBlobClient(
+      azurePath.replace(`${url}${containerName}/`, '')
+    );
 
-//     const options = { blobHTTPHeaders: { blobContentType: 'text/plain; charset=utf-8' } };
+    const extension = path.extname(defaultFolder(filepath));
+    const mimeType = getMimeType(extension) || 'application/octet-stream';
 
-//     let path = '';
+    const options = { blobHTTPHeaders: { blobContentType: mimeType } };
 
-//     if (typeof fileName === 'string') path = defaultFolder(fileName);
-//     else if (typeof filePath === 'string') path = filePath;
+    await blockBlobClient.uploadFile(defaultFolder(filepath), options);
 
-//     await blockBlobClient.uploadFile(path, options);
+    deleteFiles([filepath]);
 
-//     if (typeof fileName === 'string') deleteFiles([fileName]);
+    return blockBlobClient.url;
+  } catch (error) {
+    errorLogger(error);
+    return null;
+  }
+};
 
-//     return blockBlobClient.url;
-//   } catch (error) {
-//     console.error(error);
-//     return null;
-//   }
-// };
+export const deleteFileFromAzureByUrl = async (fileUrl: string): Promise<boolean> => {
+  try {
+    const blobPath = fileUrl.replace(`${url}${containerName}/`, '');
+
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobClient = containerClient.getBlobClient(blobPath);
+
+    const response = await blobClient.deleteIfExists();
+    return response.succeeded;
+  } catch (error) {
+    errorLogger(error);
+    return false;
+  }
+};
