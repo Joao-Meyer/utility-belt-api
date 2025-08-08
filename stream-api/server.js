@@ -47,14 +47,7 @@ const getFile = (torrentFiles, fileName) => {
 };
 
 app.get('/subtitles', cors({ origin: '*' }), async (req, res) => {
-  const origin = req.headers.origin;
-
   res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
-
-  if (origin === 'http://localhost:5173' || origin === 'https://seu-site.com') {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-  }
 
   try {
     const magnet = String(req.query.magnet || '');
